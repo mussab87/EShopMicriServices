@@ -1,7 +1,6 @@
 // Add services to the container.
 
 //Application Services
-
 var builder = WebApplication.CreateBuilder(args);
 
 var assembly = typeof(Program).Assembly;
@@ -28,6 +27,22 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
     //options.InstanceName = "Basket";
 });
+
+//Grpc Services
+builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
+})
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+
+        return handler;
+    });
 
 //Cross-Cutting Services
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
